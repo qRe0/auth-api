@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package auth;
+
+option go_package = "auth.cart.v1;cartv1";
+
+service SignUp {
+  rpc SignUp (SignUpRequest) returns (SignUpResponse);
+}
+
+message SignUpRequest {
+  string email = 1;
+  string password = 2;
+  string name = 3;
+  string phone = 4;
+}
+
+message SignUpResponse {
+  string message = 1;
+}
+
+service LogIn {
+  rpc LogIn (LogInRequest) returns (LogInResponse);
+}
+
+message LogInRequest {
+  string phone = 1;
+  string password = 2;
+}
+
+message LogInResponse {
+  string message = 1;
+}
+
+service LogOut {
+  rpc LogOut (LogOutRequest) returns (LogOutResponse);
+}
+
+message LogOutRequest {}
+
+message LogOutResponse {
+  string message = 1;
+}
+
+service Refresh {
+  rpc Refresh (RefreshRequest) returns (RefreshResponse);
+}
+
+message RefreshRequest {
+  string refreshToken = 1;
+}
+
+message RefreshResponse {
+  string message = 1;
+}

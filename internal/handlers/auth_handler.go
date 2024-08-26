@@ -1,1 +1,61 @@
 package handlers
+
+import (
+	"context"
+	"log"
+	"net"
+
+	"github.com/qRe0/auth-api/configs"
+	"github.com/qRe0/auth-api/internal/models"
+	authService "github.com/qRe0/auth-api/internal/service/auth"
+	pb "github.com/qRe0/auth-api/proto/gen/go"
+	"google.golang.org/grpc"
+)
+
+type AuthHandler struct {
+	service authService.AuthServiceInterface
+	cfg     configs.JWTConfig
+	pb.UnimplementedSignUpServer
+}
+
+func NewAuthHandler(service authService.AuthServiceInterface, cfg configs.JWTConfig, address string) *AuthHandler {
+	handler := &AuthHandler{
+		service: service,
+		cfg:     cfg,
+	}
+
+	grpcServer := grpc.NewServer()
+
+	pb.RegisterSignUpServer(grpcServer, handler)
+
+	listener, err := net.Listen("tcp", address)
+	if err != nil {
+		log.Fatalf("Failed to listen on %v: %v", address, err)
+	}
+
+	log.Printf("gRPC server is running on %v", address)
+	if err := grpcServer.Serve(listener); err != nil {
+		log.Fatalf("Failed to serve: %v", err)
+	}
+
+	return handler
+}
+
+func (a *AuthHandler) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.SignUpResponse, error) {
+	user := &models.User{
+		Email:    req.Email,
+		Password: req.Password,
+		Name:     req.Name,
+		Phone:    req.Phone,
+	}
+
+	err := a.service.SignUp(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pb.SignUpResponse{
+		Message: "User created successfully!",
+	}
+	return resp, nil
+}

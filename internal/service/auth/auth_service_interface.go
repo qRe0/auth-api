@@ -8,8 +8,8 @@ import (
 )
 
 type AuthServiceInterface interface {
-	SignUp(ctx context.Context, user *models.User) error
+	SignUp(ctx context.Context, user *models.User) (models.Tokens, error)
 	LogIn(ctx context.Context, user *models.User) (models.Tokens, error)
-	NewSession(ctx context.Context, userID string, secretKey string, lifetime time.Duration) (models.Tokens, error)
+	NewSession(ctx context.Context, userID int, secretKey string, lifetime time.Duration) (models.Tokens, error)
 	Refresh(ctx context.Context, token string) (models.Tokens, error)
 }

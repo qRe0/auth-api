@@ -65,9 +65,9 @@ func Init(cfg configs.RedisConfig) (RedisCache, error) {
 	return cacheWrapper, nil
 }
 
-func (t *TokenRepository) SaveToken(ctx context.Context, token string, userID string) error {
+func (t *TokenRepository) SaveToken(ctx context.Context, token string, userID int) error {
 	ttl, err := time.ParseDuration(t.cfg.TTL)
-	err = t.redisClient.Set(ctx, fmt.Sprintf("user:%s", userID), token, ttl)
+	err = t.redisClient.Set(ctx, fmt.Sprintf("user:%d", userID), token, ttl)
 	return err
 }
 

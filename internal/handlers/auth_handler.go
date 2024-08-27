@@ -54,7 +54,16 @@ func (a *AuthHandler) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.Si
 		Phone:    req.Phone,
 	}
 
-	err := a.service.SignUp(ctx, user)
+	tokens, err := a.service.SignUp(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	metadata := md.Pairs(
+		"Authorization", tokens.AccessToken,
+		"Refresh-Token", tokens.RefreshToken,
+	)
+	err = grpc.SendHeader(ctx, metadata)
 	if err != nil {
 		return nil, err
 	}

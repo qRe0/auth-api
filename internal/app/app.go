@@ -8,8 +8,10 @@ import (
 	"github.com/qRe0/auth-api/configs"
 	"github.com/qRe0/auth-api/internal/handlers"
 	"github.com/qRe0/auth-api/internal/migrations"
-	repository "github.com/qRe0/auth-api/internal/repository/auth"
-	service "github.com/qRe0/auth-api/internal/service/auth"
+	authRepo "github.com/qRe0/auth-api/internal/repository/auth"
+	tokenRepo "github.com/qRe0/auth-api/internal/repository/token"
+	authServ "github.com/qRe0/auth-api/internal/service/auth"
+	tokenServ "github.com/qRe0/auth-api/internal/service/token"
 	pb "github.com/qRe0/auth-api/proto/gen/go"
 	"google.golang.org/grpc"
 )
@@ -20,7 +22,12 @@ func Run() {
 		log.Fatalln(err)
 	}
 
-	db, err := repository.Init(cfg.DB)
+	db, err := authRepo.Init(cfg.DB)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	cache, err := tokenRepo.Init(cfg.Redis)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -35,8 +42,10 @@ func Run() {
 		log.Fatalln(err)
 	}
 
-	authRepo := repository.NewAuthRepository(db)
-	authService := service.NewAuthService(cfg.JWT, authRepo)
+	authRepository := authRepo.NewAuthRepository(db)
+	tokenRepository := tokenRepo.NewTokenRepo(cfg.JWT, cache)
+	tokenService := tokenServ.NewTokenService(tokenRepository)
+	authService := authServ.NewAuthService(cfg.JWT, authRepository, tokenService)
 	handler := handlers.NewAuthHandler(authService, cfg.JWT, ":50051")
 
 	lis, err := net.Listen("tcp", ":50051")

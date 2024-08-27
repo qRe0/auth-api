@@ -32,23 +32,34 @@ func NewAuthService(cfg configs.JWTConfig, repo repository.AuthRepositoryInterfa
 	}
 }
 
-func (a *AuthService) SignUp(ctx context.Context, user *models.User) error {
+func (a *AuthService) SignUp(ctx context.Context, user *models.User) (models.Tokens, error) {
 	if user.Name == "" || user.Phone == "" || user.Email == "" || user.Password == "" {
-		return errors.Wrap(errs.ErrIncorrectData, "failed to validate registration data. incorrect user data")
+		return models.Tokens{}, errors.Wrap(errs.ErrIncorrectData, "failed to validate registration data. incorrect user data")
 	}
 
 	hashedPassword, err := hashPassword(user.Password)
 	if err != nil {
-		return errors.Wrap(err, "failed to hash password")
+		return models.Tokens{}, errors.Wrap(err, "failed to hash password")
 	}
 
 	user.Password = hashedPassword
 	err = a.repo.CreateUser(ctx, user)
 	if err != nil {
-		return errors.Wrap(err, errs.ErrCreateUser.Error())
+		return models.Tokens{}, errors.Wrap(err, errs.ErrCreateUser.Error())
 	}
 
-	return nil
+	userDataFromDB, err := a.repo.GetUserData(ctx, user.Phone)
+	if err != nil {
+		return models.Tokens{}, errors.Wrap(err, errs.ErrUserNotFound.Error())
+	}
+
+	id, err := strconv.Atoi(userDataFromDB.ID)
+	if err != nil {
+		return models.Tokens{}, errors.Wrap(errs.ErrIncorrectData, "incorrect user id")
+	}
+	tokens, err := a.NewSession(ctx, id, a.cfg.SecretKey, 5*time.Minute)
+
+	return tokens, nil
 }
 
 func hashPassword(password string) (string, error) {

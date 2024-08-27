@@ -107,3 +107,12 @@ func (t *TokenRepository) GetUserIDByRefreshToken(ctx context.Context, token str
 
 	return "", errors.New("token not found")
 }
+
+func (t *TokenRepository) CheckRefreshToken(ctx context.Context, key string) (string, error) {
+	token, err := t.redisClient.Get(ctx, key)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get token from cache")
+	}
+
+	return token, nil
+}

@@ -74,12 +74,32 @@ func (a *AuthService) LogIn(ctx context.Context, user *models.User) (models.Toke
 		return models.Tokens{}, errors.Wrap(errs.ErrIncorrectData, "wrong password")
 	}
 
-	token, err := a.NewSession(ctx, userDataFromDB.ID, a.cfg.SecretKey, 5*time.Minute)
+	accessToken, err := newJWT(userDataFromDB.ID, a.cfg.SecretKey, 5*time.Minute)
 	if err != nil {
-		return models.Tokens{}, errors.Wrap(err, "failed to create new session")
+		return models.Tokens{}, err
 	}
 
-	return token, nil
+	refreshTokenExistsResponse, err := a.tokenServ.RefreshTokenExists(ctx, userDataFromDB.ID)
+	if err != nil {
+		return models.Tokens{}, err
+	}
+
+	var refreshToken string
+	if !refreshTokenExistsResponse.Exists {
+		refreshToken, err = newRefreshToken()
+		if err != nil {
+			return models.Tokens{}, err
+		}
+	} else {
+		refreshToken = refreshTokenExistsResponse.RefreshToken
+	}
+
+	tokens := models.Tokens{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+	}
+
+	return tokens, nil
 }
 
 func validatePassword(hashedPassword, password string) error {

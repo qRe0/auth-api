@@ -11,4 +11,5 @@ type AuthServiceInterface interface {
 	SignUp(ctx context.Context, user *models.User) error
 	LogIn(ctx context.Context, user *models.User) (models.Tokens, error)
 	NewSession(ctx context.Context, userID string, secretKey string, lifetime time.Duration) (models.Tokens, error)
+	Refresh(ctx context.Context, token string) (models.Tokens, error)
 }

@@ -18,6 +18,7 @@ type AuthHandler struct {
 	cfg     configs.JWTConfig
 	pb.UnimplementedSignUpServer
 	pb.UnimplementedLogInServer
+	pb.UnimplementedRefreshServer
 }
 
 func NewAuthHandler(service authService.AuthServiceInterface, cfg configs.JWTConfig, address string) *AuthHandler {
@@ -30,6 +31,7 @@ func NewAuthHandler(service authService.AuthServiceInterface, cfg configs.JWTCon
 
 	pb.RegisterSignUpServer(grpcServer, handler)
 	pb.RegisterLogInServer(grpcServer, handler)
+	pb.RegisterRefreshServer(grpcServer, handler)
 
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
@@ -85,6 +87,30 @@ func (a *AuthHandler) LogIn(ctx context.Context, req *pb.LogInRequest) (*pb.LogI
 
 	resp := &pb.LogInResponse{
 		Message: "User logged in successfully!",
+	}
+
+	return resp, nil
+}
+
+func (a *AuthHandler) Refresh(ctx context.Context, req *pb.RefreshRequest) (*pb.RefreshResponse, error) {
+	refreshToken := req.RefreshToken
+
+	tokens, err := a.service.Refresh(ctx, refreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	metadata := md.Pairs(
+		"Authorization", tokens.AccessToken,
+		"Refresh-Token", tokens.RefreshToken,
+	)
+	err = grpc.SendHeader(ctx, metadata)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pb.RefreshResponse{
+		Message: "Token refreshed successfully!",
 	}
 
 	return resp, nil

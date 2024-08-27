@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
 
@@ -120,8 +119,6 @@ func newJWT(userID string, secretKey string, lifetime time.Duration) (string, er
 		"exp": time.Now().Add(lifetime).Unix(),
 	}
 
-	log.Printf("claims: %+v\n", claims)
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
 	signedToken, err := token.SignedString([]byte(secretKey))
@@ -143,4 +140,18 @@ func newRefreshToken() (string, error) {
 	}
 
 	return fmt.Sprintf("%x", token), nil
+}
+
+func (a *AuthService) Refresh(ctx context.Context, token string) (models.Tokens, error) {
+	userID, err := a.tokenServ.GetUserIDByRefreshToken(ctx, token)
+	if err != nil {
+		return models.Tokens{}, err
+	}
+
+	newToken, err := a.NewSession(ctx, userID, a.cfg.SecretKey, 5*time.Minute)
+	if err != nil {
+		return models.Tokens{}, err
+	}
+
+	return newToken, nil
 }

@@ -27,15 +27,10 @@ type JWTConfig struct {
 	BlacklistTime string
 }
 
-type Service struct {
-	APIPort string
-}
-
 type Config struct {
-	DB      DBConfig
-	Redis   RedisConfig
-	JWT     JWTConfig
-	Service Service
+	DB    DBConfig
+	Redis RedisConfig
+	JWT   JWTConfig
 }
 
 func LoadEnv() (*Config, error) {
@@ -45,7 +40,7 @@ func LoadEnv() (*Config, error) {
 	}
 
 	requiredEnvs := []string{
-		"DB_HOST", "DB_USER", "DB_PASSWORD", "DB_NAME", "DB_PORT", "REDIS_HOST", "REDIS_PORT", "SECRET_KEY", "TTL", "BLACKLIST_TIME", "API_PORT",
+		"DB_HOST", "DB_USER", "DB_PASSWORD", "DB_NAME", "DB_PORT", "REDIS_HOST", "REDIS_PORT", "SECRET_KEY", "TTL", "BLACKLIST_TIME",
 	}
 
 	for _, env := range requiredEnvs {
@@ -70,9 +65,6 @@ func LoadEnv() (*Config, error) {
 			SecretKey:     os.Getenv("SECRET_KEY"),
 			TTL:           os.Getenv("TTL"),
 			BlacklistTime: os.Getenv("BLACKLIST_TIME"),
-		},
-		Service: Service{
-			APIPort: os.Getenv("API_PORT"),
 		},
 	}
 

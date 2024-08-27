@@ -115,9 +115,10 @@ func (a *AuthService) NewSession(ctx context.Context, userID string, secretKey s
 }
 
 func newJWT(userID string, secretKey string, lifetime time.Duration) (string, error) {
-	claims := jwt.MapClaims{}
-	claims["user_id"] = userID
-	claims["exp"] = time.Now().Add(lifetime).Unix()
+	claims := jwt.MapClaims{
+		"sub": userID,
+		"exp": time.Now().Add(lifetime).Unix(),
+	}
 
 	log.Printf("claims: %+v\n", claims)
 

@@ -20,7 +20,7 @@ func NewTokenService(repo repository.TokenRepositryInterface) *TokenService {
 	}
 }
 
-func (t *TokenService) SaveToken(ctx context.Context, token string, userID string) error {
+func (t *TokenService) SaveToken(ctx context.Context, token string, userID int) error {
 	err := t.repo.SaveToken(ctx, token, userID)
 	if err != nil {
 		return errs.ErrSaveToken
@@ -38,8 +38,8 @@ func (t *TokenService) GetUserIDByRefreshToken(ctx context.Context, token string
 	return userID, nil
 }
 
-func (t *TokenService) RefreshTokenExists(ctx context.Context, userID string) (models.RefreshTokenExistsResponse, error) {
-	key := fmt.Sprintf("user:%s", userID)
+func (t *TokenService) RefreshTokenExists(ctx context.Context, userID int) (models.RefreshTokenExistsResponse, error) {
+	key := fmt.Sprintf("user:%d", userID)
 	token, err := t.repo.CheckRefreshToken(ctx, key)
 	if err != nil {
 		return models.RefreshTokenExistsResponse{

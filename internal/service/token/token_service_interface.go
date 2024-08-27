@@ -7,7 +7,7 @@ import (
 )
 
 type TokenServiceInterface interface {
-	SaveToken(ctx context.Context, token, userID string) error
+	SaveToken(ctx context.Context, token string, userID int) error
 	GetUserIDByRefreshToken(ctx context.Context, token string) (string, error)
-	RefreshTokenExists(ctx context.Context, userID string) (models.RefreshTokenExistsResponse, error)
+	RefreshTokenExists(ctx context.Context, userID int) (models.RefreshTokenExistsResponse, error)
 }

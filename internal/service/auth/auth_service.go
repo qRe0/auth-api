@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -74,12 +75,17 @@ func (a *AuthService) LogIn(ctx context.Context, user *models.User) (models.Toke
 		return models.Tokens{}, errors.Wrap(errs.ErrIncorrectData, "wrong password")
 	}
 
-	accessToken, err := newJWT(userDataFromDB.ID, a.cfg.SecretKey, 5*time.Minute)
+	userID, err := strconv.Atoi(userDataFromDB.ID)
+	if err != nil {
+		return models.Tokens{}, errors.Wrap(errs.ErrIncorrectData, "incorrect user id")
+	}
+
+	accessToken, err := newJWT(userID, a.cfg.SecretKey, 5*time.Minute)
 	if err != nil {
 		return models.Tokens{}, err
 	}
 
-	refreshTokenExistsResponse, err := a.tokenServ.RefreshTokenExists(ctx, userDataFromDB.ID)
+	refreshTokenExistsResponse, err := a.tokenServ.RefreshTokenExists(ctx, userID)
 	if err != nil {
 		return models.Tokens{}, err
 	}
@@ -111,7 +117,7 @@ func validatePassword(hashedPassword, password string) error {
 	return nil
 }
 
-func (a *AuthService) NewSession(ctx context.Context, userID string, secretKey string, lifetime time.Duration) (models.Tokens, error) {
+func (a *AuthService) NewSession(ctx context.Context, userID int, secretKey string, lifetime time.Duration) (models.Tokens, error) {
 	accessToken, err := newJWT(userID, secretKey, lifetime)
 	if err != nil {
 		return models.Tokens{}, err
@@ -133,7 +139,7 @@ func (a *AuthService) NewSession(ctx context.Context, userID string, secretKey s
 	}, err
 }
 
-func newJWT(userID string, secretKey string, lifetime time.Duration) (string, error) {
+func newJWT(userID int, secretKey string, lifetime time.Duration) (string, error) {
 	claims := jwt.MapClaims{
 		"sub": userID,
 		"exp": time.Now().Add(lifetime).Unix(),
@@ -168,7 +174,12 @@ func (a *AuthService) Refresh(ctx context.Context, token string) (models.Tokens,
 		return models.Tokens{}, err
 	}
 
-	newToken, err := a.NewSession(ctx, userID, a.cfg.SecretKey, 5*time.Minute)
+	id, err := strconv.Atoi(userID)
+	if err != nil {
+		return models.Tokens{}, errors.Wrap(errs.ErrIncorrectData, "incorrect user id")
+	}
+
+	newToken, err := a.NewSession(ctx, id, a.cfg.SecretKey, 5*time.Minute)
 	if err != nil {
 		return models.Tokens{}, err
 	}

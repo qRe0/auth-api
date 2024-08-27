@@ -49,3 +49,20 @@ func (a *AuthRepository) CreateUser(ctx context.Context, user *models.User) erro
 
 	return nil
 }
+
+func (a *AuthRepository) GetUserData(ctx context.Context, phone string) (models.User, error) {
+	const getUserIDQuery = `SELECT user_id FROM Users WHERE phone = $1`
+	var data models.User
+	err := a.db.QueryRowxContext(ctx, getUserIDQuery, phone).Scan(&data.ID)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	const getUserPassQuery = `SELECT password FROM Users WHERE phone = $1`
+	err = a.db.QueryRowxContext(ctx, getUserPassQuery, phone).Scan(&data.Password)
+	if err != nil {
+		return models.User{}, err
+	}
+
+	return data, nil
+}

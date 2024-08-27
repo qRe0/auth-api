@@ -8,4 +8,5 @@ import (
 
 type AuthRepositoryInterface interface {
 	CreateUser(ctx context.Context, user *models.User) error
+	GetUserData(ctx context.Context, phone string) (models.User, error)
 }

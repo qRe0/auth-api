@@ -10,12 +10,14 @@ import (
 	authService "github.com/qRe0/auth-api/internal/service/auth"
 	pb "github.com/qRe0/auth-api/proto/gen/go"
 	"google.golang.org/grpc"
+	md "google.golang.org/grpc/metadata"
 )
 
 type AuthHandler struct {
 	service authService.AuthServiceInterface
 	cfg     configs.JWTConfig
 	pb.UnimplementedSignUpServer
+	pb.UnimplementedLogInServer
 }
 
 func NewAuthHandler(service authService.AuthServiceInterface, cfg configs.JWTConfig, address string) *AuthHandler {
@@ -27,6 +29,7 @@ func NewAuthHandler(service authService.AuthServiceInterface, cfg configs.JWTCon
 	grpcServer := grpc.NewServer()
 
 	pb.RegisterSignUpServer(grpcServer, handler)
+	pb.RegisterLogInServer(grpcServer, handler)
 
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
@@ -57,5 +60,32 @@ func (a *AuthHandler) SignUp(ctx context.Context, req *pb.SignUpRequest) (*pb.Si
 	resp := &pb.SignUpResponse{
 		Message: "User created successfully!",
 	}
+	return resp, nil
+}
+
+func (a *AuthHandler) LogIn(ctx context.Context, req *pb.LogInRequest) (*pb.LogInResponse, error) {
+	user := &models.User{
+		Phone:    req.Phone,
+		Password: req.Password,
+	}
+
+	tokens, err := a.service.LogIn(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	metadata := md.Pairs(
+		"Authorization", tokens.AccessToken,
+		"Refresh-Token", tokens.RefreshToken,
+	)
+	err = grpc.SendHeader(ctx, metadata)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pb.LogInResponse{
+		Message: "User logged in successfully!",
+	}
+
 	return resp, nil
 }

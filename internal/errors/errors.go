@@ -11,4 +11,5 @@ var (
 	ErrUserNotFound  = errors.New("user not found in database")
 	ErrGenerateToken = errors.New("failed to generate token")
 	ErrSaveToken     = errors.New("failed to save token")
+	ErrTokenNotFound = errors.New("token not found")
 )

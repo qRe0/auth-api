@@ -197,3 +197,31 @@ func (a *AuthService) Refresh(ctx context.Context, token string) (models.Tokens,
 
 	return newToken, nil
 }
+
+func (a *AuthService) RevokeTokens(ctx context.Context, user *models.User) error {
+	if user.Phone == "" || user.Email == "" || user.Password == "" || user.Name == "" {
+		return errors.Wrap(errs.ErrIncorrectData, "incorrect input number")
+	}
+
+	userDataFromDB, err := a.repo.GetUserData(ctx, user.Phone)
+	if err != nil {
+		return errs.ErrUserNotFound
+	}
+
+	err = validatePassword(userDataFromDB.Password, user.Password)
+	if err != nil {
+		return errors.Wrap(errs.ErrIncorrectData, "wrong password")
+	}
+
+	id, err := strconv.Atoi(userDataFromDB.ID)
+	if err != nil {
+		return errors.Wrap(errs.ErrIncorrectData, "incorrect user id")
+	}
+
+	err = a.tokenServ.DeleteToken(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

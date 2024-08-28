@@ -4,12 +4,10 @@ services:
   api:
     build: .
     container_name: auth-api
-    ports:
-      - ${API_PORT}:${API_PORT}
     depends_on:
-      postgres:
+      psql:
         condition: service_healthy
-      redis:
+      cache:
         condition: service_healthy
     environment:
       - POSTGRES_HOST=${DB_HOST}
@@ -19,8 +17,10 @@ services:
       - POSTGRES_DB=${DB_NAME}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
+    networks:
+      - cart-network
 
-  postgres:
+  psql:
     image: postgres:latest
     container_name: auth-db
     environment:
@@ -34,8 +34,10 @@ services:
       interval: 2s
       timeout: 2s
       retries: 3
+    networks:
+      - cart-network
 
-  redis:
+  cache:
     image: redis:latest
     container_name: cache
     ports:
@@ -45,3 +47,9 @@ services:
       interval: 2s
       timeout: 2s
       retries: 3
+    networks:
+      - cart-network
+
+networks:
+  cart-network:
+    external: true

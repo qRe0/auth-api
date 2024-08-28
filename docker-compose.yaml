@@ -17,6 +17,8 @@ services:
       - POSTGRES_DB=${DB_NAME}
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
+    networks:
+      - cart-network
 
   psql:
     image: postgres:latest
@@ -32,6 +34,8 @@ services:
       interval: 2s
       timeout: 2s
       retries: 3
+    networks:
+      - cart-network
 
   cache:
     image: redis:latest
@@ -43,3 +47,9 @@ services:
       interval: 2s
       timeout: 2s
       retries: 3
+    networks:
+      - cart-network
+
+networks:
+  cart-network:
+    external: true

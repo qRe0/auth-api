@@ -19,6 +19,7 @@ type AuthHandler struct {
 	pb.UnimplementedSignUpServer
 	pb.UnimplementedLogInServer
 	pb.UnimplementedRefreshServer
+	pb.UnimplementedRevokeServer
 }
 
 func NewAuthHandler(service authService.AuthServiceInterface, cfg configs.JWTConfig, address string) *AuthHandler {
@@ -32,6 +33,7 @@ func NewAuthHandler(service authService.AuthServiceInterface, cfg configs.JWTCon
 	pb.RegisterSignUpServer(grpcServer, handler)
 	pb.RegisterLogInServer(grpcServer, handler)
 	pb.RegisterRefreshServer(grpcServer, handler)
+	pb.RegisterRevokeServer(grpcServer, handler)
 
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
@@ -120,6 +122,26 @@ func (a *AuthHandler) Refresh(ctx context.Context, req *pb.RefreshRequest) (*pb.
 
 	resp := &pb.RefreshResponse{
 		Message: "Token refreshed successfully!",
+	}
+
+	return resp, nil
+}
+
+func (a *AuthHandler) Revoke(ctx context.Context, req *pb.RevokeRequest) (*pb.RevokeResponse, error) {
+	user := &models.User{
+		Name:     req.Name,
+		Phone:    req.Phone,
+		Email:    req.Email,
+		Password: req.Password,
+	}
+
+	err := a.service.RevokeTokens(ctx, user)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pb.RevokeResponse{
+		Message: "Tokens revoked!",
 	}
 
 	return resp, nil

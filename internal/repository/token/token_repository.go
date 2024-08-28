@@ -21,6 +21,7 @@ type CacheClient interface {
 	Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error
 	Ping() error
 	Get(ctx context.Context, key string) (string, error)
+	Del(ctx context.Context, key string) error
 }
 
 func (r *RedisCache) Set(ctx context.Context, key string, value interface{}, expiration time.Duration) error {
@@ -35,6 +36,11 @@ func (r *RedisCache) Ping() error {
 func (r *RedisCache) Get(ctx context.Context, key string) (string, error) {
 	r.client.WithContext(ctx)
 	return r.client.Get(key).Result()
+}
+
+func (r *RedisCache) Del(ctx context.Context, key string) error {
+	r.client.WithContext(ctx)
+	return r.client.Del(key).Err()
 }
 
 type TokenRepository struct {
@@ -115,4 +121,22 @@ func (t *TokenRepository) CheckRefreshToken(ctx context.Context, key string) (st
 	}
 
 	return token, nil
+}
+
+func (t *TokenRepository) GetToken(ctx context.Context, key string) (string, error) {
+	token, err := t.redisClient.Get(ctx, key)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get token from cache")
+	}
+
+	return token, nil
+}
+
+func (t *TokenRepository) DeleteToken(ctx context.Context, key string) error {
+	err := t.redisClient.Del(ctx, key)
+	if err != nil {
+		return errors.Wrap(err, "failed to delete token from cache")
+	}
+
+	return nil
 }

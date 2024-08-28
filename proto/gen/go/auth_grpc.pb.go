@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.19.6
-// source: api/v1/auth.proto
+// source: api/v2/auth.proto
 
 package _go
 
@@ -102,7 +102,7 @@ var SignUp_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/auth.proto",
+	Metadata: "api/v2/auth.proto",
 }
 
 // LogInClient is the client API for LogIn service.
@@ -188,7 +188,7 @@ var LogIn_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/auth.proto",
+	Metadata: "api/v2/auth.proto",
 }
 
 // LogOutClient is the client API for LogOut service.
@@ -274,7 +274,7 @@ var LogOut_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/auth.proto",
+	Metadata: "api/v2/auth.proto",
 }
 
 // RefreshClient is the client API for Refresh service.
@@ -360,5 +360,91 @@ var Refresh_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v1/auth.proto",
+	Metadata: "api/v2/auth.proto",
+}
+
+// RevokeClient is the client API for Revoke service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type RevokeClient interface {
+	Revoke(ctx context.Context, in *RevokeRequest, opts ...grpc.CallOption) (*RevokeResponse, error)
+}
+
+type revokeClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewRevokeClient(cc grpc.ClientConnInterface) RevokeClient {
+	return &revokeClient{cc}
+}
+
+func (c *revokeClient) Revoke(ctx context.Context, in *RevokeRequest, opts ...grpc.CallOption) (*RevokeResponse, error) {
+	out := new(RevokeResponse)
+	err := c.cc.Invoke(ctx, "/auth.Revoke/Revoke", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// RevokeServer is the server API for Revoke service.
+// All implementations must embed UnimplementedRevokeServer
+// for forward compatibility
+type RevokeServer interface {
+	Revoke(context.Context, *RevokeRequest) (*RevokeResponse, error)
+	mustEmbedUnimplementedRevokeServer()
+}
+
+// UnimplementedRevokeServer must be embedded to have forward compatible implementations.
+type UnimplementedRevokeServer struct {
+}
+
+func (UnimplementedRevokeServer) Revoke(context.Context, *RevokeRequest) (*RevokeResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Revoke not implemented")
+}
+func (UnimplementedRevokeServer) mustEmbedUnimplementedRevokeServer() {}
+
+// UnsafeRevokeServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to RevokeServer will
+// result in compilation errors.
+type UnsafeRevokeServer interface {
+	mustEmbedUnimplementedRevokeServer()
+}
+
+func RegisterRevokeServer(s grpc.ServiceRegistrar, srv RevokeServer) {
+	s.RegisterService(&Revoke_ServiceDesc, srv)
+}
+
+func _Revoke_Revoke_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RevokeRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RevokeServer).Revoke(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.Revoke/Revoke",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RevokeServer).Revoke(ctx, req.(*RevokeRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// Revoke_ServiceDesc is the grpc.ServiceDesc for Revoke service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var Revoke_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "auth.Revoke",
+	HandlerType: (*RevokeServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Revoke",
+			Handler:    _Revoke_Revoke_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "api/v2/auth.proto",
 }

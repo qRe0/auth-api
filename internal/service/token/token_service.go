@@ -54,3 +54,23 @@ func (t *TokenService) RefreshTokenExists(ctx context.Context, userID int) (mode
 	}
 	return resp, nil
 }
+
+func (t *TokenService) GetToken(ctx context.Context, userID int) (string, error) {
+	key := fmt.Sprintf("user:%d", userID)
+	token, err := t.repo.GetToken(ctx, key)
+	if err != nil {
+		return "", errs.ErrTokenNotFound
+	}
+
+	return token, nil
+}
+
+func (t *TokenService) DeleteToken(ctx context.Context, userID int) error {
+	key := fmt.Sprintf("user:%d", userID)
+	err := t.repo.DeleteToken(ctx, key)
+	if err != nil {
+		return errs.ErrDeletingToken
+	}
+
+	return nil
+}

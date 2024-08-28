@@ -4,12 +4,10 @@ services:
   api:
     build: .
     container_name: auth-api
-    ports:
-      - ${API_PORT}:${API_PORT}
     depends_on:
-      postgres:
+      psql:
         condition: service_healthy
-      redis:
+      cache:
         condition: service_healthy
     environment:
       - POSTGRES_HOST=${DB_HOST}
@@ -20,7 +18,7 @@ services:
       - REDIS_HOST=${REDIS_HOST}
       - REDIS_PORT=${REDIS_PORT}
 
-  postgres:
+  psql:
     image: postgres:latest
     container_name: auth-db
     environment:
@@ -35,7 +33,7 @@ services:
       timeout: 2s
       retries: 3
 
-  redis:
+  cache:
     image: redis:latest
     container_name: cache
     ports:

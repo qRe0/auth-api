@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.19.6
-// source: api/v2/auth.proto
+// source: api/v3/auth.proto
 
 package _go
 
@@ -102,7 +102,7 @@ var SignUp_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v2/auth.proto",
+	Metadata: "api/v3/auth.proto",
 }
 
 // LogInClient is the client API for LogIn service.
@@ -188,7 +188,7 @@ var LogIn_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v2/auth.proto",
+	Metadata: "api/v3/auth.proto",
 }
 
 // LogOutClient is the client API for LogOut service.
@@ -274,7 +274,7 @@ var LogOut_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v2/auth.proto",
+	Metadata: "api/v3/auth.proto",
 }
 
 // RefreshClient is the client API for Refresh service.
@@ -360,7 +360,7 @@ var Refresh_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v2/auth.proto",
+	Metadata: "api/v3/auth.proto",
 }
 
 // RevokeClient is the client API for Revoke service.
@@ -446,5 +446,91 @@ var Revoke_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/v2/auth.proto",
+	Metadata: "api/v3/auth.proto",
+}
+
+// AuthMiddlewareClient is the client API for AuthMiddleware service.
+//
+// For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
+type AuthMiddlewareClient interface {
+	ValidateToken(ctx context.Context, in *ValidateTokenRequest, opts ...grpc.CallOption) (*ValidateTokenResponse, error)
+}
+
+type authMiddlewareClient struct {
+	cc grpc.ClientConnInterface
+}
+
+func NewAuthMiddlewareClient(cc grpc.ClientConnInterface) AuthMiddlewareClient {
+	return &authMiddlewareClient{cc}
+}
+
+func (c *authMiddlewareClient) ValidateToken(ctx context.Context, in *ValidateTokenRequest, opts ...grpc.CallOption) (*ValidateTokenResponse, error) {
+	out := new(ValidateTokenResponse)
+	err := c.cc.Invoke(ctx, "/auth.AuthMiddleware/ValidateToken", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// AuthMiddlewareServer is the server API for AuthMiddleware service.
+// All implementations must embed UnimplementedAuthMiddlewareServer
+// for forward compatibility
+type AuthMiddlewareServer interface {
+	ValidateToken(context.Context, *ValidateTokenRequest) (*ValidateTokenResponse, error)
+	mustEmbedUnimplementedAuthMiddlewareServer()
+}
+
+// UnimplementedAuthMiddlewareServer must be embedded to have forward compatible implementations.
+type UnimplementedAuthMiddlewareServer struct {
+}
+
+func (UnimplementedAuthMiddlewareServer) ValidateToken(context.Context, *ValidateTokenRequest) (*ValidateTokenResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ValidateToken not implemented")
+}
+func (UnimplementedAuthMiddlewareServer) mustEmbedUnimplementedAuthMiddlewareServer() {}
+
+// UnsafeAuthMiddlewareServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to AuthMiddlewareServer will
+// result in compilation errors.
+type UnsafeAuthMiddlewareServer interface {
+	mustEmbedUnimplementedAuthMiddlewareServer()
+}
+
+func RegisterAuthMiddlewareServer(s grpc.ServiceRegistrar, srv AuthMiddlewareServer) {
+	s.RegisterService(&AuthMiddleware_ServiceDesc, srv)
+}
+
+func _AuthMiddleware_ValidateToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ValidateTokenRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AuthMiddlewareServer).ValidateToken(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/auth.AuthMiddleware/ValidateToken",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AuthMiddlewareServer).ValidateToken(ctx, req.(*ValidateTokenRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+// AuthMiddleware_ServiceDesc is the grpc.ServiceDesc for AuthMiddleware service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var AuthMiddleware_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "auth.AuthMiddleware",
+	HandlerType: (*AuthMiddlewareServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "ValidateToken",
+			Handler:    _AuthMiddleware_ValidateToken_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "api/v3/auth.proto",
 }

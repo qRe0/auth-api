@@ -225,3 +225,24 @@ func (a *AuthService) RevokeTokens(ctx context.Context, user *models.User) error
 
 	return nil
 }
+
+func (a *AuthService) ValidateToken(token string, cfg string) (string, error) {
+	claims := jwt.MapClaims{}
+	_, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		return []byte(cfg), nil
+	})
+	if err != nil {
+		return "", errors.Wrap(err, "failed to parse token")
+	}
+
+	userID := fmt.Sprintf("%v", claims["sub"])
+	return userID, nil
+}
+
+func (a *AuthService) TokenBlacklisted(ctx context.Context, token string) (bool, error) {
+	if token == "" {
+		return false, errors.Wrap(errs.ErrIncorrectData, "empty token")
+	} else {
+		return a.tokenServ.TokenBlacklisted(ctx, token)
+	}
+}

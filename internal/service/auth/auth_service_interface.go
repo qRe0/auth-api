@@ -13,4 +13,6 @@ type AuthServiceInterface interface {
 	NewSession(ctx context.Context, userID int, secretKey string, lifetime time.Duration) (models.Tokens, error)
 	Refresh(ctx context.Context, token string) (models.Tokens, error)
 	RevokeTokens(ctx context.Context, user *models.User) error
+	ValidateToken(token string, cfg string) (string, error)
+	TokenBlacklisted(ctx context.Context, token string) (bool, error)
 }

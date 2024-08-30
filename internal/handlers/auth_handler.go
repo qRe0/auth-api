@@ -5,6 +5,8 @@ import (
 	"log"
 	"net"
 
+	"github.com/go-redis/redis"
+	"github.com/pkg/errors"
 	"github.com/qRe0/auth-api/configs"
 	"github.com/qRe0/auth-api/internal/models"
 	authService "github.com/qRe0/auth-api/internal/service/auth"
@@ -20,6 +22,7 @@ type AuthHandler struct {
 	pb.UnimplementedLogInServer
 	pb.UnimplementedRefreshServer
 	pb.UnimplementedRevokeServer
+	pb.UnimplementedAuthMiddlewareServer
 }
 
 func NewAuthHandler(service authService.AuthServiceInterface, cfg configs.JWTConfig, address string) *AuthHandler {
@@ -34,6 +37,7 @@ func NewAuthHandler(service authService.AuthServiceInterface, cfg configs.JWTCon
 	pb.RegisterLogInServer(grpcServer, handler)
 	pb.RegisterRefreshServer(grpcServer, handler)
 	pb.RegisterRevokeServer(grpcServer, handler)
+	pb.RegisterAuthMiddlewareServer(grpcServer, handler)
 
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
@@ -142,6 +146,37 @@ func (a *AuthHandler) Revoke(ctx context.Context, req *pb.RevokeRequest) (*pb.Re
 
 	resp := &pb.RevokeResponse{
 		Message: "Tokens revoked!",
+	}
+
+	return resp, nil
+}
+
+func (a *AuthHandler) ValidateToken(ctx context.Context, req *pb.ValidateTokenRequest) (*pb.ValidateTokenResponse, error) {
+	token := req.Token
+
+	userID, err := a.service.ValidateToken(token, a.cfg.SecretKey)
+	if err != nil {
+		return &pb.ValidateTokenResponse{
+			Valid: false,
+		}, err
+	}
+
+	blacklisted, err := a.service.TokenBlacklisted(ctx, token)
+	if err != nil && !errors.Is(err, redis.Nil) {
+		return &pb.ValidateTokenResponse{
+			Valid: false,
+		}, err
+	}
+
+	if blacklisted {
+		return &pb.ValidateTokenResponse{
+			Valid: false,
+		}, nil
+	}
+
+	resp := &pb.ValidateTokenResponse{
+		UserId: userID,
+		Valid:  true,
 	}
 
 	return resp, nil

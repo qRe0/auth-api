@@ -140,3 +140,12 @@ func (t *TokenRepository) DeleteToken(ctx context.Context, key string) error {
 
 	return nil
 }
+
+func (t *TokenRepository) TokenBlacklisted(ctx context.Context, key string) (bool, error) {
+	_, err := t.redisClient.Get(ctx, key)
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
+}

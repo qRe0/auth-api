@@ -8,4 +8,5 @@ type TokenRepositryInterface interface {
 	CheckRefreshToken(ctx context.Context, key string) (string, error)
 	GetToken(ctx context.Context, key string) (string, error)
 	DeleteToken(ctx context.Context, key string) error
+	TokenBlacklisted(ctx context.Context, key string) (bool, error)
 }

@@ -74,3 +74,9 @@ func (t *TokenService) DeleteToken(ctx context.Context, userID int) error {
 
 	return nil
 }
+
+func (t *TokenService) TokenBlacklisted(ctx context.Context, token string) (bool, error) {
+	key := fmt.Sprintf("blacklist:%s", token)
+
+	return t.repo.TokenBlacklisted(ctx, key)
+}

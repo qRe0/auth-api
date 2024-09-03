@@ -149,3 +149,10 @@ func (t *TokenRepository) TokenBlacklisted(ctx context.Context, key string) (boo
 
 	return true, nil
 }
+
+func (t *TokenRepository) BlacklistToken(ctx context.Context, key string) error {
+	ttl, err := time.ParseDuration(t.cfg.BlacklistTime)
+	val := fmt.Sprintf("blacklisted at %v", time.Now().Format(time.DateTime))
+	err = t.redisClient.Set(ctx, key, val, ttl)
+	return err
+}

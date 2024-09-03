@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -245,4 +246,38 @@ func (a *AuthService) TokenBlacklisted(ctx context.Context, token string) (bool,
 	} else {
 		return a.tokenServ.TokenBlacklisted(ctx, token)
 	}
+}
+
+func (a *AuthService) LogOut(ctx context.Context, token string) error {
+	if token == "" {
+		return errors.Wrap(errs.ErrIncorrectData, "empty token")
+	}
+
+	splitedToken := strings.Split(token, " ")
+	if len(splitedToken) != 2 {
+		return errors.Wrap(errs.ErrIncorrectData, "incorrect token format")
+	}
+	token = splitedToken[1]
+
+	userID, err := a.ValidateToken(token, a.cfg.SecretKey)
+	if err != nil {
+		return errors.Wrap(err, "logout failed")
+	}
+
+	id, err := strconv.Atoi(userID)
+	if err != nil {
+		return errors.Wrap(errs.ErrIncorrectData, "incorrect user id")
+	}
+
+	err = a.tokenServ.DeleteToken(ctx, id)
+	if err != nil {
+		return errors.Wrap(err, "failed to delete token")
+	}
+
+	err = a.tokenServ.BlacklistToken(ctx, token)
+	if err != nil {
+		return errors.Wrap(err, "failed to blacklist token")
+	}
+
+	return nil
 }

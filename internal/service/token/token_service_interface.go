@@ -13,4 +13,5 @@ type TokenServiceInterface interface {
 	GetToken(ctx context.Context, userID int) (string, error)
 	DeleteToken(ctx context.Context, id int) error
 	TokenBlacklisted(ctx context.Context, token string) (bool, error)
+	BlacklistToken(ctx context.Context, token string) error
 }

@@ -15,4 +15,5 @@ type AuthServiceInterface interface {
 	RevokeTokens(ctx context.Context, user *models.User) error
 	ValidateToken(token string, cfg string) (string, error)
 	TokenBlacklisted(ctx context.Context, token string) (bool, error)
+	LogOut(ctx context.Context, token string) error
 }

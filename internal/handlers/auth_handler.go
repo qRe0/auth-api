@@ -22,6 +22,7 @@ type AuthHandler struct {
 	pb.UnimplementedLogInServer
 	pb.UnimplementedRefreshServer
 	pb.UnimplementedRevokeServer
+	pb.UnimplementedLogOutServer
 	pb.UnimplementedAuthMiddlewareServer
 }
 
@@ -37,6 +38,7 @@ func NewAuthHandler(service authService.AuthServiceInterface, cfg configs.JWTCon
 	pb.RegisterLogInServer(grpcServer, handler)
 	pb.RegisterRefreshServer(grpcServer, handler)
 	pb.RegisterRevokeServer(grpcServer, handler)
+	pb.RegisterLogOutServer(grpcServer, handler)
 	pb.RegisterAuthMiddlewareServer(grpcServer, handler)
 
 	listener, err := net.Listen("tcp", address)
@@ -146,6 +148,25 @@ func (a *AuthHandler) Revoke(ctx context.Context, req *pb.RevokeRequest) (*pb.Re
 
 	resp := &pb.RevokeResponse{
 		Message: "Tokens revoked!",
+	}
+
+	return resp, nil
+}
+
+func (a *AuthHandler) LogOut(ctx context.Context, _ *pb.LogOutRequest) (*pb.LogOutResponse, error) {
+	metadata, ok := md.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("metadata not found")
+	}
+	token := metadata.Get("Authorization")[0]
+
+	err := a.service.LogOut(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pb.LogOutResponse{
+		Message: "Logged out successfully!",
 	}
 
 	return resp, nil
